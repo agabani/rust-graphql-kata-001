@@ -37,9 +37,9 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: rust-actix-web-template-web
+          name: rust-graphql-kata-001-web
           path: |
-            ./target/debug/rust-actix-web-template-web
+            ./target/debug/rust-graphql-kata-001-web
 
   cargo-clippy:
     name: Cargo Clippy

@@ -1229,7 +1229,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust-actix-web-template-web"
+name = "rust-graphql-kata-001-web"
 version = "0.1.0"
 dependencies = [
  "actix-rt",

@@ -1,4 +1,4 @@
 [workspace]
 members = [
-    "rust-actix-web-template-web"
+    "rust-graphql-kata-001-web"
 ]

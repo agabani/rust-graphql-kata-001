@@ -2,8 +2,8 @@
 <module type="CPP_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/rust-actix-web-template-web/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/rust-actix-web-template-web/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/rust-graphql-kata-001-web/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rust-graphql-kata-001-web/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

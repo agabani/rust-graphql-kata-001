@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run rust-actix-web-template-web" type="CargoCommandRunConfiguration" factoryName="Cargo Command" singleton="false">
-    <option name="command" value="run --package rust-actix-web-template-web --bin rust-actix-web-template-web" />
+  <configuration default="false" name="Run rust-graphql-kata-001-web" type="CargoCommandRunConfiguration" factoryName="Cargo Command" singleton="false">
+    <option name="command" value="run --package rust-graphql-kata-001-web --bin rust-graphql-kata-001-web" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />

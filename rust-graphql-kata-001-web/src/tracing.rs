@@ -9,7 +9,7 @@ use tracing_subscriber::{EnvFilter, Registry};
 ///
 /// Basic usage:
 /// ```
-/// use rust_actix_web_template_web::tracing;
+/// use rust_graphql_kata_001_web::tracing;
 ///
 /// let subscriber = tracing::configure("info");
 ///
@@ -25,7 +25,7 @@ pub fn init(subscriber: impl Subscriber + Send + Sync) {
 ///
 /// Basic usage:
 /// ```
-/// use rust_actix_web_template_web::tracing;
+/// use rust_graphql_kata_001_web::tracing;
 ///
 /// let subscriber = tracing::configure("info");
 /// ```
@@ -39,7 +39,7 @@ pub fn configure(level: &str) -> impl Subscriber + Send + Sync {
         .unwrap();
 
     let fmt_layer =
-        BunyanFormattingLayer::new("rust-actix-web-template.web".to_string(), std::io::stdout);
+        BunyanFormattingLayer::new("rust-graphql-kata-001.web".to_string(), std::io::stdout);
 
     Registry::default()
         .with(filter_layer)
@@ -62,14 +62,14 @@ impl<T, E: std::fmt::Display> TraceErrorExt<T, E> for Result<T, E> {
     ///
     /// Basic `Ok` usage:
     /// ```
-    /// use rust_actix_web_template_web::tracing::TraceErrorExt;
+    /// use rust_graphql_kata_001_web::tracing::TraceErrorExt;
     ///
     /// let result: Result<i32, String> = Ok(42).trace_err();
     /// ```
     ///
     /// Basic `Err` usage:
     /// ```
-    /// use rust_actix_web_template_web::tracing::TraceErrorExt;
+    /// use rust_graphql_kata_001_web::tracing::TraceErrorExt;
     ///
     /// let result: Result<i32, String> = Err("Something went wrong".to_string()).trace_err();
     /// ```

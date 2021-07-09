@@ -1,14 +1,6 @@
-# Rust Actix Web Template
+# Rust GraphQL Kata 001
 
-Actix Web 4 template repository.
-
-## Features
-
-* Configuration through environment variables
-* GitHub tests workflow
-* Integration tests
-* Tracing
-* Workspace
+Rust GraphQL Kata 001
 
 ## Environment Variables
 
@@ -16,9 +8,3 @@ Actix Web 4 template repository.
 |------------------------|-------------------------------|---------|
 | APP__HTTP_SERVER__HOST | Interface to bind HTTP server | 0.0.0.0 |
 | APP__HTTP_SERVER__PORT | Port to bind HTTP server      | 0       |
-
-## Workflow Secrets
-
-| Name          | Value         |
-|---------------|---------------|
-| CODECOV_TOKEN | Codecov Token |

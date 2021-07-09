@@ -1,4 +1,4 @@
-use rust_actix_web_template_web::startup;
+use rust_graphql_kata_001_web::startup;
 
 pub struct TestServer {
     pub address: String,
