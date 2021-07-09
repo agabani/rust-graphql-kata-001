@@ -1,5 +1,5 @@
 use crate::configuration::Configuration;
-use crate::routes::health;
+use crate::routes::{graphql, health};
 use crate::tracing::TraceErrorExt;
 use actix_web::dev::Server;
 use actix_web::{web, App, HttpServer};
@@ -27,7 +27,9 @@ pub fn run(overrides: &[(&str, &str)]) -> (Server, u16, Configuration) {
 
     // configure server
     let server = HttpServer::new(move || {
-        App::new().service(web::scope("/health").configure(health::config))
+        App::new()
+            .service(web::scope("/graphql").configure(graphql::config))
+            .service(web::scope("/health").configure(health::config))
     })
     .listen(listener)
     .trace_err()
