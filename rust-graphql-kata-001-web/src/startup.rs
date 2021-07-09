@@ -25,11 +25,16 @@ pub fn run(overrides: &[(&str, &str)]) -> (Server, u16, Configuration) {
         .expect("Failed to bind port");
     let port = listener.local_addr().unwrap().port();
 
+    // graphql
+    let schema = crate::graphql::build();
+    let data_schema = web::Data::new(schema);
+
     // configure server
     let server = HttpServer::new(move || {
         App::new()
             .service(web::scope("/graphql").configure(graphql::config))
             .service(web::scope("/health").configure(health::config))
+            .app_data(data_schema.clone())
     })
     .listen(listener)
     .trace_err()
