@@ -2,14 +2,8 @@ use crate::database::Database;
 use crate::domain::{Session, User, UserId, Username};
 use actix_web::web;
 use async_graphql::connection::{query, Connection, Edge, EmptyFields};
-use async_graphql::{Context, EmptyMutation, EmptySubscription, Object, Result, Schema};
+use async_graphql::{Context, Object, Result};
 use std::str::FromStr;
-
-pub type GraphQLSchema = Schema<QueryRoot, EmptyMutation, EmptySubscription>;
-
-pub fn build() -> GraphQLSchema {
-    Schema::build(QueryRoot, EmptyMutation, EmptySubscription).finish()
-}
 
 pub struct QueryRoot;
 

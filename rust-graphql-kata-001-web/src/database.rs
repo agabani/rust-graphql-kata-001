@@ -184,4 +184,29 @@ LIMIT $3
             })
             .collect()
     }
+
+    #[tracing::instrument(
+        skip(self, user),
+        fields(
+            database.user_id = user.id.0.as_str(),
+            database.username = user.username.0.as_str(),
+        )
+    )]
+    pub async fn create_user(&self, user: &User) -> bool {
+        sqlx::query!(
+            r#"
+INSERT INTO "user" (public_id, username)
+VALUES ($1, $2)
+ON CONFLICT DO NOTHING
+RETURNING id;
+"#,
+            user.id.0,
+            user.username.0
+        )
+        .fetch_optional(&self.postgres)
+        .await
+        .trace_err()
+        .expect("Failed to run database query")
+        .is_some()
+    }
 }
