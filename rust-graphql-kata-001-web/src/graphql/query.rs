@@ -1,4 +1,4 @@
-use crate::database::Database;
+use crate::database::{Database, Identity};
 use crate::domain::{Session, User, UserId, Username};
 use actix_web::web;
 use async_graphql::connection::{query, Connection, Edge, EmptyFields};
@@ -108,31 +108,7 @@ impl User {
                     (None, None) => unreachable!(),
                 };
 
-                let page_info = match (first, last) {
-                    (Some(first), None) => {
-                        let has_previous_page = false;
-                        let has_next_page = results.len() > first;
-                        let results = results.into_iter().take(first).collect::<Vec<_>>();
-                        (results, has_previous_page, has_next_page)
-                    }
-                    (None, Some(last)) => {
-                        let has_previous_page = results.len() > last;
-                        let has_next_page = false;
-                        let results = results.into_iter().take(last).rev().collect::<Vec<_>>();
-                        (results, has_previous_page, has_next_page)
-                    }
-                    _ => unreachable!(),
-                };
-
-                let mut connection = Connection::new(page_info.1, page_info.2);
-                connection.append(page_info.0.into_iter().map(|item| {
-                    Edge::with_additional_fields(
-                        base64::encode(item.id.to_string()),
-                        item.value,
-                        EmptyFields,
-                    )
-                }));
-                Ok(connection)
+                build_connections(results, first, last)
             },
         )
         .await
@@ -160,4 +136,32 @@ impl Session {
     async fn user_agent(&self) -> String {
         self.user_agent.0.clone()
     }
+}
+
+fn build_connections<T>(
+    results: Vec<Identity<usize, T>>,
+    first: Option<usize>,
+    last: Option<usize>,
+) -> Result<Connection<String, T, EmptyFields, EmptyFields>> {
+    let page_info = match (first, last) {
+        (Some(first), None) => {
+            let has_previous_page = false;
+            let has_next_page = results.len() > first;
+            let results = results.into_iter().take(first).collect::<Vec<_>>();
+            (results, has_previous_page, has_next_page)
+        }
+        (None, Some(last)) => {
+            let has_previous_page = results.len() > last;
+            let has_next_page = false;
+            let results = results.into_iter().take(last).rev().collect::<Vec<_>>();
+            (results, has_previous_page, has_next_page)
+        }
+        _ => unreachable!(),
+    };
+
+    let mut connection = Connection::new(page_info.1, page_info.2);
+    connection.append(page_info.0.into_iter().map(|item| {
+        Edge::with_additional_fields(base64::encode(item.id.to_string()), item.value, EmptyFields)
+    }));
+    Ok(connection)
 }
