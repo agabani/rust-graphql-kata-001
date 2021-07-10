@@ -5,6 +5,11 @@ pub struct Database {
     postgres: sqlx::Pool<sqlx::Postgres>,
 }
 
+pub struct Identity<I, T> {
+    pub id: I,
+    pub value: T,
+}
+
 impl Database {
     pub fn new(postgres: sqlx::Pool<sqlx::Postgres>) -> Self {
         Self { postgres }
@@ -87,24 +92,32 @@ WHERE S.public_id = $1
     }
 
     #[tracing::instrument(
-        skip(self, user, limit),
+        skip(self, user, start, limit),
         fields(
             database.user_id = user.id.0.as_str(),
         )
     )]
-    pub async fn get_sessions_by_user_oldest(&self, user: &User, limit: usize) -> Vec<Session> {
+    pub async fn get_sessions_by_user_oldest(
+        &self,
+        user: &User,
+        start: usize,
+        limit: usize,
+    ) -> Vec<Identity<usize, Session>> {
         let records = sqlx::query!(
             r#"
-SELECT S.public_id AS id,
+SELECT S.id AS id,
+       S.public_id AS public_id,
        S.user_agent as user_agent,
        S.created as created
 FROM session AS S
         INNER JOIN "user" as U ON U.id = S.user_id
 WHERE U.public_id = $1
+  AND S.id > $2
 ORDER BY S.id ASC
-LIMIT $2
+LIMIT $3
             "#,
             user.id.0,
+            start as i64,
             limit as i64
         )
         .fetch_all(&self.postgres)
@@ -114,33 +127,44 @@ LIMIT $2
 
         records
             .into_iter()
-            .map(|record| Session {
-                id: SessionId(record.id),
-                user_agent: UserAgent(record.user_agent),
-                created: Created(record.created),
+            .map(|record| Identity {
+                id: record.id as usize,
+                value: Session {
+                    id: SessionId(record.public_id),
+                    user_agent: UserAgent(record.user_agent),
+                    created: Created(record.created),
+                },
             })
             .collect()
     }
 
     #[tracing::instrument(
-        skip(self, user, limit),
+        skip(self, user, start, limit),
         fields(
             database.user_id = user.id.0.as_str(),
         )
     )]
-    pub async fn get_sessions_by_user_newest(&self, user: &User, limit: usize) -> Vec<Session> {
+    pub async fn get_sessions_by_user_newest(
+        &self,
+        user: &User,
+        start: usize,
+        limit: usize,
+    ) -> Vec<Identity<usize, Session>> {
         let records = sqlx::query!(
             r#"
-SELECT S.public_id AS id,
+SELECT S.id AS id,
+       S.public_id AS public_id,
        S.user_agent as user_agent,
        S.created as created
 FROM session AS S
         INNER JOIN "user" as U ON U.id = S.user_id
 WHERE U.public_id = $1
+  AND S.id < $2
 ORDER BY S.id DESC
-LIMIT $2
+LIMIT $3
             "#,
             user.id.0,
+            start as i64,
             limit as i64
         )
         .fetch_all(&self.postgres)
@@ -150,10 +174,13 @@ LIMIT $2
 
         records
             .into_iter()
-            .map(|record| Session {
-                id: SessionId(record.id),
-                user_agent: UserAgent(record.user_agent),
-                created: Created(record.created),
+            .map(|record| Identity {
+                id: record.id as usize,
+                value: Session {
+                    id: SessionId(record.public_id),
+                    user_agent: UserAgent(record.user_agent),
+                    created: Created(record.created),
+                },
             })
             .collect()
     }

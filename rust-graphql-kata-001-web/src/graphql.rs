@@ -3,6 +3,7 @@ use crate::domain::{Session, User, UserId, Username};
 use actix_web::web;
 use async_graphql::connection::{query, Connection, Edge, EmptyFields};
 use async_graphql::{Context, EmptyMutation, EmptySubscription, Object, Result, Schema};
+use std::str::FromStr;
 
 pub type GraphQLSchema = Schema<QueryRoot, EmptyMutation, EmptySubscription>;
 
@@ -77,34 +78,46 @@ impl User {
             .data::<web::Data<Database>>()
             .expect("Database not in context");
 
+        fn decode<T: FromStr, V: AsRef<[u8]>>(value: V) -> Option<T> {
+            base64::decode(value)
+                .ok()
+                .and_then(|utf8_bytes| String::from_utf8_lossy(&utf8_bytes).parse().ok())
+        }
+
         query(
             after,
             before,
             first,
             last,
-            |after, before, first, last| async move {
+            |after: Option<String>, before: Option<String>, first, last| async move {
                 let sessions = match (first, last) {
                     (Some(first), None) => {
-                        let first = first;
+                        let start = after.and_then(decode).unwrap_or(usize::MIN);
                         (
-                            database.get_sessions_by_user_oldest(self, first + 1).await,
+                            database
+                                .get_sessions_by_user_oldest(self, start, first + 1)
+                                .await,
                             first,
                             true,
                         )
                     }
                     (None, Some(last)) => {
-                        let last = last;
+                        let start = before.and_then(decode).unwrap_or(u32::MAX);
                         (
-                            database.get_sessions_by_user_newest(self, last + 1).await,
+                            database
+                                .get_sessions_by_user_newest(self, start as usize, last + 1)
+                                .await,
                             last,
                             false,
                         )
                     }
                     (None, None) => {
+                        let start = after.and_then(decode).unwrap_or(100);
                         let limit = first.unwrap_or(100);
-
                         (
-                            database.get_sessions_by_user_oldest(self, limit + 1).await,
+                            database
+                                .get_sessions_by_user_oldest(self, start, limit + 1)
+                                .await,
                             limit,
                             true,
                         )
@@ -117,7 +130,11 @@ impl User {
                 let mut connection =
                     Connection::new(has_page && !sessions.2, has_page && sessions.2);
                 connection.append(sessions.0.into_iter().take(sessions.1).map(|session| {
-                    Edge::with_additional_fields(session.id.0.clone(), session, EmptyFields)
+                    Edge::with_additional_fields(
+                        base64::encode(session.id.to_string()),
+                        session.value,
+                        EmptyFields,
+                    )
                 }));
                 Ok(connection)
             },

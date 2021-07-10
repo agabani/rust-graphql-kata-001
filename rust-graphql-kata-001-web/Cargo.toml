@@ -8,6 +8,7 @@ edition = "2018"
 [dependencies]
 actix-web = "4.0.0-beta.8"
 async-graphql = "2.9.7"
+base64 = "0.13.0"
 config = "0.11.0"
 serde = "1.0.126"
 sqlx = { version = "0.5.5", features = ["macros", "migrate", "offline", "postgres", "runtime-tokio-rustls", "time"] }

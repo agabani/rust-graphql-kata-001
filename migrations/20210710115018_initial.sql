@@ -1,6 +1,6 @@
 create table "user"
 (
-    id        serial       not null,
+    id        bigserial    not null,
     public_id varchar(36)  not null,
     username  varchar(200) not null,
     constraint user_pk
@@ -15,7 +15,7 @@ create unique index user_username_uindex
 
 create table session
 (
-    id         serial                   not null,
+    id         bigserial                not null,
     public_id  varchar(36)              not null,
     user_id    integer                  not null,
     user_agent varchar(200)             not null,
