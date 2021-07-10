@@ -6,7 +6,7 @@ pub struct Session {
 
 #[derive(Clone)]
 pub struct User {
-    pub id: String,
+    pub id: UserId,
     pub username: Username,
 }
 
@@ -14,4 +14,19 @@ pub struct User {
 pub struct UserAgent(pub String);
 
 #[derive(Clone)]
+pub struct UserId(pub String);
+
+impl UserId {
+    pub fn new(value: &str) -> Self {
+        Self(value.to_string())
+    }
+}
+
+#[derive(Clone)]
 pub struct Username(pub String);
+
+impl Username {
+    pub fn new(value: &str) -> Self {
+        Self(value.to_string())
+    }
+}

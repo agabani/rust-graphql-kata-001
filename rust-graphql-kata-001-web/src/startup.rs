@@ -1,4 +1,5 @@
 use crate::configuration::Configuration;
+use crate::database::Database;
 use crate::routes::{graphql, health};
 use crate::tracing::TraceErrorExt;
 use actix_web::dev::Server;
@@ -31,13 +32,18 @@ pub fn run(overrides: &[(&str, &str)]) -> (Server, u16, Configuration) {
 
     // postgres database pool
     let postgres_database_pool = configuration.postgres.database_pool();
-    let data_postgres_database_pool = web::Data::new(postgres_database_pool);
+    let data_postgres_database_pool = web::Data::new(postgres_database_pool.clone());
+
+    // database
+    let database = Database::new(postgres_database_pool);
+    let data_database = web::Data::new(database);
 
     // server
     let server = HttpServer::new(move || {
         App::new()
             .service(web::scope("/graphql").configure(graphql::config))
             .service(web::scope("/health").configure(health::config))
+            .app_data(data_database.clone())
             .app_data(data_postgres_database_pool.clone())
             .app_data(data_schema.clone())
     })

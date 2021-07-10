@@ -1,6 +1,8 @@
-use crate::domain::{Session, User, UserAgent, Username};
+use crate::database::Database;
+use crate::domain::{Session, User, UserAgent, UserId, Username};
+use actix_web::web;
 use async_graphql::connection::{query, Connection, Edge, EmptyFields};
-use async_graphql::{EmptyMutation, EmptySubscription, Object, Result, Schema};
+use async_graphql::{Context, EmptyMutation, EmptySubscription, Object, Result, Schema};
 
 pub type GraphQLSchema = Schema<QueryRoot, EmptyMutation, EmptySubscription>;
 
@@ -16,18 +18,26 @@ impl QueryRoot {
         a + b
     }
 
-    async fn current_user(&self) -> User {
-        User {
-            id: "id".to_string(),
-            username: Username("username".to_string()),
-        }
+    async fn current_user<'a>(&self, ctx: &'a Context<'a>) -> Option<User> {
+        let database = ctx
+            .data::<web::Data<Database>>()
+            .expect("Database not in context");
+
+        let username = ctx.data_opt::<UserId>();
+
+        let user_id = match username {
+            None => return None,
+            Some(user_id) => user_id,
+        };
+
+        database.get_user_by_id(user_id).await
     }
 }
 
 #[Object]
 impl User {
     async fn id(&self) -> String {
-        self.id.clone()
+        self.id.0.clone()
     }
 
     async fn username(&self) -> String {
@@ -104,7 +114,7 @@ impl Session {
     async fn user(&self) -> Option<User> {
         match self.id.as_str() {
             "id 1" | "id 2" => Some(User {
-                id: "id".to_string(),
+                id: UserId("id".to_string()),
                 username: Username("username".to_string()),
             }),
             _ => None,

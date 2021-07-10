@@ -1,3 +1,5 @@
+use crate::database::Database;
+use crate::domain::UserId;
 use crate::graphql::GraphQLSchema;
 use actix_web::{web, HttpResponse};
 use async_graphql::http::{playground_source, GraphQLPlaygroundConfig};
@@ -8,8 +10,25 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .route("/", web::get().to(index_playground));
 }
 
-async fn index(schema: web::Data<GraphQLSchema>, request: web::Json<Request>) -> HttpResponse {
-    HttpResponse::Ok().json(schema.execute(request.0).await)
+async fn index(
+    database: web::Data<Database>,
+    schema: web::Data<GraphQLSchema>,
+    http_request: web::HttpRequest,
+    request: web::Json<Request>,
+) -> HttpResponse {
+    let mut request = request.0.data(database);
+
+    if let Some(user_id) = http_request
+        .headers()
+        .get("user-id")
+        .and_then(|value| value.to_str().map(UserId::new).ok())
+    {
+        request = request.data(user_id);
+    }
+
+    let response = schema.execute(request).await;
+
+    HttpResponse::Ok().json(response)
 }
 
 async fn index_playground() -> HttpResponse {

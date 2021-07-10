@@ -1,8 +1,8 @@
 create table "user"
 (
-    id        serial      not null,
-    public_id varchar(36) not null,
-    username  varchar(200),
+    id        serial       not null,
+    public_id varchar(36)  not null,
+    username  varchar(200) not null,
     constraint user_pk
         primary key (id)
 );
