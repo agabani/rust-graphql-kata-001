@@ -1,4 +1,6 @@
-use crate::domain::{Created, Session, SessionId, User, UserAgent, UserId, Username};
+use crate::domain::{
+    Created, Forum, ForumId, ForumName, Session, SessionId, User, UserAgent, UserId, Username,
+};
 use crate::tracing::TraceErrorExt;
 
 pub struct Database {
@@ -208,5 +210,87 @@ RETURNING id;
         .trace_err()
         .expect("Failed to run database query")
         .is_some()
+    }
+
+    #[tracing::instrument(skip(self))]
+    pub async fn get_forums_oldest(
+        &self,
+        start: usize,
+        limit: usize,
+    ) -> Vec<Identity<usize, Forum>> {
+        let records = sqlx::query!(
+            r#"
+SELECT F.id as id,
+       F.public_id as public_id,
+       F.created as created,
+       F.name as name,
+       U.public_id as user_public_id
+FROM forum as F
+        INNER JOIN "user" as U ON U.id = F.created_by_user_id
+WHERE F.id > $1
+ORDER BY F.id ASC
+LIMIT $2
+"#,
+            start as i64,
+            limit as i64
+        )
+        .fetch_all(&self.postgres)
+        .await
+        .trace_err()
+        .expect("Failed to run database query");
+
+        records
+            .into_iter()
+            .map(|record| Identity {
+                id: record.id as usize,
+                value: Forum {
+                    id: ForumId(record.public_id),
+                    created: Created(record.created),
+                    created_by: UserId(record.user_public_id),
+                    name: ForumName(record.name),
+                },
+            })
+            .collect()
+    }
+
+    #[tracing::instrument(skip(self))]
+    pub async fn get_forums_newest(
+        &self,
+        start: usize,
+        limit: usize,
+    ) -> Vec<Identity<usize, Forum>> {
+        let records = sqlx::query!(
+            r#"
+SELECT F.id as id,
+       F.public_id as public_id,
+       F.created as created,
+       F.name as name,
+       U.public_id as user_public_id
+FROM forum as F
+        INNER JOIN "user" as U ON U.id = F.created_by_user_id
+WHERE F.id < $1
+ORDER BY F.id DESC
+LIMIT $2
+"#,
+            start as i64,
+            limit as i64
+        )
+        .fetch_all(&self.postgres)
+        .await
+        .trace_err()
+        .expect("Failed to run database query");
+
+        records
+            .into_iter()
+            .map(|record| Identity {
+                id: record.id as usize,
+                value: Forum {
+                    id: ForumId(record.public_id),
+                    created: Created(record.created),
+                    created_by: UserId(record.user_public_id),
+                    name: ForumName(record.name),
+                },
+            })
+            .collect()
     }
 }

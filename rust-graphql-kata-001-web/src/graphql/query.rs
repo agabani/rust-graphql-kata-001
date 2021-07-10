@@ -55,7 +55,12 @@ impl QueryRoot {
                     first
                 };
 
-                let results = vec![];
+                let results = match (first, last) {
+                    (Some(_), Some(_)) => todo!("Bad request..."),
+                    (Some(first), None) => database.get_forums_oldest(after, first + 1).await,
+                    (None, Some(last)) => database.get_forums_newest(before, last + 1).await,
+                    (None, None) => unreachable!(),
+                };
 
                 build_connections(results, first, last)
             },
