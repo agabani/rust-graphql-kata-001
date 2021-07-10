@@ -1,6 +1,7 @@
 use crate::database::Database;
 use crate::domain::{
-    Created, Forum, ForumId, ForumName, Thread, ThreadId, ThreadName, User, UserId, Username,
+    Created, Forum, ForumId, ForumName, Reply, ReplyId, ReplyText, Thread, ThreadId, ThreadName,
+    User, UserId, Username,
 };
 use actix_web::web;
 use async_graphql::{Context, InputObject, Object, Result};
@@ -35,6 +36,36 @@ impl MutationRoot {
 
         match database.create_forum(&forum).await {
             true => Some(forum),
+            false => None,
+        }
+    }
+
+    async fn create_reply<'a>(
+        &self,
+        ctx: &'a Context<'a>,
+        input: CreateReplyInput,
+    ) -> Option<Reply> {
+        let database = ctx
+            .data::<web::Data<Database>>()
+            .expect("Database not in context");
+
+        let user_id = ctx.data_opt::<UserId>();
+
+        let user_id = match user_id {
+            None => return None,
+            Some(user_id) => user_id,
+        };
+
+        let reply = Reply {
+            id: ReplyId(Uuid::new_v4().to_string()),
+            created: Created(time::OffsetDateTime::now_utc()),
+            created_by: user_id.clone(),
+            thread: ThreadId(input.reply.thread_id),
+            text: ReplyText(input.reply.text),
+        };
+
+        match database.create_reply(&reply).await {
+            true => Some(reply),
             false => None,
         }
     }
@@ -94,6 +125,11 @@ pub struct CreateForumInput {
 }
 
 #[derive(InputObject)]
+pub struct CreateReplyInput {
+    reply: ReplyInput,
+}
+
+#[derive(InputObject)]
 pub struct CreateThreadInput {
     thread: ThreadInput,
 }
@@ -106,6 +142,12 @@ pub struct CreateUserInput {
 #[derive(InputObject)]
 struct ForumInput {
     name: String,
+}
+
+#[derive(InputObject)]
+struct ReplyInput {
+    text: String,
+    thread_id: String,
 }
 
 #[derive(InputObject)]

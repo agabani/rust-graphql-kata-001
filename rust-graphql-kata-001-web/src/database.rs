@@ -644,4 +644,41 @@ LIMIT $3
             })
             .collect()
     }
+
+    #[tracing::instrument(
+        skip(self, reply),
+        fields(
+            database.reply.id = reply.id.0.as_str(),
+            database.thread.id = reply.thread.0.as_str(),
+            database.user.id = reply.created_by.0.as_str(),
+        )
+    )]
+    pub async fn create_reply(&self, reply: &Reply) -> bool {
+        sqlx::query!(
+            r#"
+INSERT INTO reply (public_id, created, created_by_user_id, thread_id, text)
+VALUES (
+    $1, $2,
+    (SELECT U.id
+         FROM "user" AS U
+         WHERE u.public_id = $3),
+    (SELECT T.id
+         FROM thread AS T
+         WHERE T.public_id = $4),
+    $5)
+ON CONFLICT DO NOTHING
+RETURNING id;;
+"#,
+            reply.id.0,
+            reply.created.0,
+            reply.created_by.0,
+            reply.thread.0,
+            reply.text.0
+        )
+        .fetch_optional(&self.postgres)
+        .await
+        .trace_err()
+        .expect("Failed to run database query")
+        .is_some()
+    }
 }
