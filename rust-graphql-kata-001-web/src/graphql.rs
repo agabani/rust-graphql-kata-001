@@ -1,5 +1,5 @@
 use crate::database::Database;
-use crate::domain::{Session, User, UserId};
+use crate::domain::{Session, User, UserId, Username};
 use actix_web::web;
 use async_graphql::connection::{query, Connection, Edge, EmptyFields};
 use async_graphql::{Context, EmptyMutation, EmptySubscription, Object, Result, Schema};
@@ -31,6 +31,27 @@ impl QueryRoot {
         };
 
         database.get_user_by_id(user_id).await
+    }
+
+    async fn user<'a>(
+        &self,
+        ctx: &'a Context<'a>,
+        id: Option<String>,
+        username: Option<String>,
+    ) -> Option<User> {
+        let database = ctx
+            .data::<web::Data<Database>>()
+            .expect("Database not in context");
+
+        if let Some(id) = id {
+            return database.get_user_by_id(&UserId(id)).await;
+        }
+
+        if let Some(username) = username {
+            return database.get_user_by_username(&Username(username)).await;
+        }
+
+        None
     }
 }
 
