@@ -1,5 +1,5 @@
 use crate::database::{Database, Identity};
-use crate::domain::{Session, User, UserId, Username};
+use crate::domain::{Forum, Session, User, UserId, Username};
 use actix_web::web;
 use async_graphql::connection::{query, Connection, Edge, EmptyFields};
 use async_graphql::{Context, Object, Result};
@@ -28,6 +28,41 @@ impl QueryRoot {
         database.get_user_by_id(user_id).await
     }
 
+    async fn forums<'a>(
+        &self,
+        ctx: &'a Context<'a>,
+        after: Option<String>,
+        before: Option<String>,
+        first: Option<i32>,
+        last: Option<i32>,
+    ) -> Result<Connection<String, Forum, EmptyFields, EmptyFields>> {
+        let database = ctx
+            .data::<web::Data<Database>>()
+            .expect("Database not in context");
+
+        query(
+            after,
+            before,
+            first,
+            last,
+            |after: Option<String>, before: Option<String>, first, last| async move {
+                let after = after.and_then(decode_cursor).unwrap_or(usize::MIN);
+                let before = before.and_then(decode_cursor).unwrap_or(u32::MAX as usize);
+
+                let first = if first.is_none() && last.is_none() {
+                    Some(10)
+                } else {
+                    first
+                };
+
+                let results = vec![];
+
+                build_connections(results, first, last)
+            },
+        )
+        .await
+    }
+
     async fn user<'a>(
         &self,
         ctx: &'a Context<'a>,
@@ -47,6 +82,25 @@ impl QueryRoot {
         }
 
         None
+    }
+}
+
+#[Object]
+impl Forum {
+    async fn id(&self) -> String {
+        self.id.0.clone()
+    }
+
+    async fn created(&self) -> String {
+        self.created.is8601()
+    }
+
+    async fn created_by(&self) -> User {
+        todo!()
+    }
+
+    async fn name(&self) -> String {
+        self.name.0.clone()
     }
 }
 
@@ -72,20 +126,14 @@ impl User {
             .data::<web::Data<Database>>()
             .expect("Database not in context");
 
-        fn decode<T: FromStr, V: AsRef<[u8]>>(value: V) -> Option<T> {
-            base64::decode(value)
-                .ok()
-                .and_then(|utf8_bytes| String::from_utf8_lossy(&utf8_bytes).parse().ok())
-        }
-
         query(
             after,
             before,
             first,
             last,
             |after: Option<String>, before: Option<String>, first, last| async move {
-                let after = after.and_then(decode).unwrap_or(usize::MIN);
-                let before = before.and_then(decode).unwrap_or(u32::MAX as usize);
+                let after = after.and_then(decode_cursor).unwrap_or(usize::MIN);
+                let before = before.and_then(decode_cursor).unwrap_or(u32::MAX as usize);
 
                 let first = if first.is_none() && last.is_none() {
                     Some(10)
@@ -118,7 +166,7 @@ impl User {
 #[Object]
 impl Session {
     async fn created(&self) -> String {
-        self.created.0.format("%Y-%m-%dT%H:%M:%S.%NZ")
+        self.created.is8601()
     }
 
     async fn id(&self) -> String {
@@ -164,4 +212,10 @@ fn build_connections<T>(
         Edge::with_additional_fields(base64::encode(item.id.to_string()), item.value, EmptyFields)
     }));
     Ok(connection)
+}
+
+fn decode_cursor<T: FromStr, V: AsRef<[u8]>>(value: V) -> Option<T> {
+    base64::decode(value)
+        .ok()
+        .and_then(|utf8_bytes| String::from_utf8_lossy(&utf8_bytes).parse().ok())
 }

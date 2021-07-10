@@ -1,12 +1,18 @@
 #[derive(Clone)]
 pub struct Created(pub time::OffsetDateTime);
 
+impl Created {
+    pub fn is8601(&self) -> String {
+        self.0.format("%Y-%m-%dT%H:%M:%S.%NZ")
+    }
+}
+
 #[derive(Clone)]
 pub struct Forum {
-    id: ForumId,
-    created: Created,
-    created_by: UserId,
-    name: ForumName,
+    pub id: ForumId,
+    pub created: Created,
+    pub created_by: UserId,
+    pub name: ForumName,
 }
 
 #[derive(Clone)]
@@ -17,11 +23,11 @@ pub struct ForumName(pub String);
 
 #[derive(Clone)]
 pub struct Reply {
-    id: ReplyId,
-    created: Created,
-    created_by: UserId,
-    thread: ThreadId,
-    text: ReplyText,
+    pub id: ReplyId,
+    pub created: Created,
+    pub created_by: UserId,
+    pub thread: ThreadId,
+    pub text: ReplyText,
 }
 
 #[derive(Clone)]
@@ -42,11 +48,11 @@ pub struct SessionId(pub String);
 
 #[derive(Clone)]
 pub struct Thread {
-    id: ThreadId,
-    created: Created,
-    created_by: UserId,
-    forum: ForumId,
-    name: ThreadName,
+    pub id: ThreadId,
+    pub created: Created,
+    pub created_by: UserId,
+    pub forum: ForumId,
+    pub name: ThreadName,
 }
 
 #[derive(Clone)]
