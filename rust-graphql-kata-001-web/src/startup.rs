@@ -17,7 +17,7 @@ pub fn run(overrides: &[(&str, &str)]) -> (Server, u16, Configuration) {
         .trace_err()
         .expect("Failed to load configuration");
 
-    // configure http listener
+    // http listener
     let listener = configuration
         .http_server
         .tcp_listener()
@@ -29,11 +29,16 @@ pub fn run(overrides: &[(&str, &str)]) -> (Server, u16, Configuration) {
     let schema = crate::graphql::build();
     let data_schema = web::Data::new(schema);
 
-    // configure server
+    // postgres database pool
+    let postgres_database_pool = configuration.postgres.database_pool();
+    let data_postgres_database_pool = web::Data::new(postgres_database_pool);
+
+    // server
     let server = HttpServer::new(move || {
         App::new()
             .service(web::scope("/graphql").configure(graphql::config))
             .service(web::scope("/health").configure(health::config))
+            .app_data(data_postgres_database_pool.clone())
             .app_data(data_schema.clone())
     })
     .listen(listener)

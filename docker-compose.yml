@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  postgres:
+    environment:
+      POSTGRES_DB: rust-graphql-kata-001
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+    healthcheck:
+      test: pg_isready
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: postgres
+    ports:
+    - 5432:5432

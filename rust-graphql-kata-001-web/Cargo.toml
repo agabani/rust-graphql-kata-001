@@ -10,10 +10,12 @@ actix-web = "4.0.0-beta.8"
 async-graphql = "2.9.7"
 config = "0.11.0"
 serde = "1.0.126"
+sqlx = { version = "0.5.5", features = ["macros", "migrate", "offline", "postgres", "runtime-tokio-rustls"] }
 tracing = "0.1.26"
 tracing-bunyan-formatter = "0.2.4"
 tracing-futures = "0.2.5"
 tracing-subscriber = "0.2.19"
+uuid = { version = "0.8.2", features = ["v4"] }
 
 [dev-dependencies]
 actix-rt = "2.2.0"

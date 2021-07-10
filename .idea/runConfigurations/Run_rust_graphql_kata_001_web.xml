@@ -11,6 +11,12 @@
     <envs>
       <env name="APP__HTTP_SERVER__HOST" value="127.0.0.1" />
       <env name="APP__HTTP_SERVER__PORT" value="8080" />
+      <env name="APP__POSTGRES__DATABASE_NAME" value="rust-graphql-kata-001" />
+      <env name="APP__POSTGRES__HOST" value="127.0.0.1" />
+      <env name="APP__POSTGRES__PASSWORD" value="password" />
+      <env name="APP__POSTGRES__PORT" value="5432" />
+      <env name="APP__POSTGRES__REQUIRE_SSL" value="false" />
+      <env name="APP__POSTGRES__USERNAME" value="postgres" />
     </envs>
     <option name="isRedirectInput" value="false" />
     <option name="redirectInputPath" value="" />
