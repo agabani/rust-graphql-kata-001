@@ -1,4 +1,4 @@
-use crate::domain::{Session, User};
+use crate::domain::{Session, User, UserAgent, Username};
 use async_graphql::{EmptyMutation, EmptySubscription, Object, Schema};
 
 pub type GraphQLSchema = Schema<QueryRoot, EmptyMutation, EmptySubscription>;
@@ -18,7 +18,7 @@ impl QueryRoot {
     async fn current_user(&self) -> User {
         User {
             id: "id".to_string(),
-            username: "username".to_string(),
+            username: Username("username".to_string()),
         }
     }
 }
@@ -30,18 +30,18 @@ impl User {
     }
 
     async fn username(&self) -> String {
-        self.username.clone()
+        self.username.0.clone()
     }
 
     async fn sessions(&self, id: Option<String>) -> Vec<Session> {
         let data = vec![
             Session {
                 id: "id 1".to_string(),
-                user_agent: "user_agent".to_string(),
+                user_agent: UserAgent("user_agent".to_string()),
             },
             Session {
                 id: "id 2".to_string(),
-                user_agent: "user_agent".to_string(),
+                user_agent: UserAgent("user_agent".to_string()),
             },
         ];
 
@@ -64,5 +64,15 @@ impl Session {
 
     async fn user_agent(&self) -> String {
         self.id.clone()
+    }
+
+    async fn user(&self) -> Option<User> {
+        match self.id.as_str() {
+            "id 1" | "id 2" => Some(User {
+                id: "id".to_string(),
+                username: Username("username".to_string()),
+            }),
+            _ => None,
+        }
     }
 }
