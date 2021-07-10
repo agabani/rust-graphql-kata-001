@@ -521,7 +521,7 @@ SELECT T.public_id as public_id,
 FROM thread as T
         INNER JOIN forum AS F ON F.id = T.forum_id
         INNER JOIN "user" as U ON U.id = T.created_by_user_id
-WHERE F.public_id = $1
+WHERE T.public_id = $1
             "#,
             thread_id.0
         )
@@ -680,5 +680,111 @@ RETURNING id;;
         .trace_err()
         .expect("Failed to run database query")
         .is_some()
+    }
+
+    #[tracing::instrument(
+        skip(self, user, start, limit),
+        fields(
+          database.user.id = user.id.0.as_str(),
+        )
+    )]
+    pub async fn get_replies_by_user_oldest(
+        &self,
+        user: &User,
+        start: usize,
+        limit: usize,
+    ) -> Vec<Identity<usize, Reply>> {
+        let records = sqlx::query!(
+            r#"
+SELECT R.id AS id,
+       R.public_id as public_id,
+       R.created as created,
+       R.text as text,
+       U.public_id as user_public_id,
+       T.public_id as thread_public_id
+FROM reply AS R
+        INNER JOIN "user" as U ON U.id = R.created_by_user_id
+        INNER JOIN thread AS T ON T.id = R.thread_id
+WHERE U.public_id = $1
+  AND R.id > $2
+ORDER BY R.id ASC
+LIMIT $3
+            "#,
+            user.id.0,
+            start as i64,
+            limit as i64
+        )
+        .fetch_all(&self.postgres)
+        .await
+        .trace_err()
+        .expect("Failed to run database query");
+
+        records
+            .into_iter()
+            .map(|record| Identity {
+                id: record.id as usize,
+
+                value: Reply {
+                    id: ReplyId(record.public_id),
+                    created: Created(record.created),
+                    created_by: UserId(record.user_public_id),
+                    thread: ThreadId(record.thread_public_id),
+                    text: ReplyText(record.text),
+                },
+            })
+            .collect()
+    }
+
+    #[tracing::instrument(
+        skip(self, user, start, limit),
+        fields(
+          database.user.id = user.id.0.as_str(),
+        )
+    )]
+    pub async fn get_replies_by_user_newest(
+        &self,
+        user: &User,
+        start: usize,
+        limit: usize,
+    ) -> Vec<Identity<usize, Reply>> {
+        let records = sqlx::query!(
+            r#"
+SELECT R.id AS id,
+       R.public_id as public_id,
+       R.created as created,
+       R.text as text,
+       U.public_id as user_public_id,
+       T.public_id as thread_public_id
+FROM reply AS R
+        INNER JOIN "user" as U ON U.id = R.created_by_user_id
+        INNER JOIN thread AS T ON T.id = R.thread_id
+WHERE U.public_id = $1
+  AND R.id < $2
+ORDER BY R.id DESC
+LIMIT $3
+            "#,
+            user.id.0,
+            start as i64,
+            limit as i64
+        )
+        .fetch_all(&self.postgres)
+        .await
+        .trace_err()
+        .expect("Failed to run database query");
+
+        records
+            .into_iter()
+            .map(|record| Identity {
+                id: record.id as usize,
+
+                value: Reply {
+                    id: ReplyId(record.public_id),
+                    created: Created(record.created),
+                    created_by: UserId(record.user_public_id),
+                    thread: ThreadId(record.thread_public_id),
+                    text: ReplyText(record.text),
+                },
+            })
+            .collect()
     }
 }

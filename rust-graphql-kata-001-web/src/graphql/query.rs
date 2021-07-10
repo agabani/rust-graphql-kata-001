@@ -281,6 +281,54 @@ impl User {
         self.username.0.clone()
     }
 
+    async fn replies<'a>(
+        &self,
+        ctx: &'a Context<'a>,
+        after: Option<String>,
+        before: Option<String>,
+        first: Option<i32>,
+        last: Option<i32>,
+    ) -> Result<Connection<String, Reply, EmptyFields, EmptyFields>> {
+        let database = ctx
+            .data::<web::Data<Database>>()
+            .expect("Database not in context");
+
+        query(
+            after,
+            before,
+            first,
+            last,
+            |after: Option<String>, before: Option<String>, first, last| async move {
+                let after = after.and_then(decode_cursor).unwrap_or(usize::MIN);
+                let before = before.and_then(decode_cursor).unwrap_or(u32::MAX as usize);
+
+                let first = if first.is_none() && last.is_none() {
+                    Some(10)
+                } else {
+                    first
+                };
+
+                let results = match (first, last) {
+                    (Some(_), Some(_)) => todo!("Bad request..."),
+                    (Some(first), None) => {
+                        database
+                            .get_replies_by_user_oldest(self, after, first + 1)
+                            .await
+                    }
+                    (None, Some(last)) => {
+                        database
+                            .get_replies_by_user_newest(self, before, last + 1)
+                            .await
+                    }
+                    (None, None) => unreachable!(),
+                };
+
+                build_connections(results, first, last)
+            },
+        )
+        .await
+    }
+
     async fn sessions<'a>(
         &self,
         ctx: &'a Context<'a>,
