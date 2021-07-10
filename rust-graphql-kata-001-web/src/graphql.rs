@@ -65,42 +65,30 @@ impl User {
         self.username.0.clone()
     }
 
-    async fn sessions<'a>(&self, ctx: &'a Context<'a>, id: Option<String>) -> Vec<Session> {
-        let database = ctx
-            .data::<web::Data<Database>>()
-            .expect("Database not in context");
-
-        database.get_sessions_by_user(self).await
-    }
-
-    async fn numbers(
+    async fn sessions<'a>(
         &self,
+        ctx: &'a Context<'a>,
         after: Option<String>,
         before: Option<String>,
         first: Option<i32>,
         last: Option<i32>,
-    ) -> Result<Connection<usize, i32, EmptyFields, EmptyFields>> {
+    ) -> Result<Connection<String, Session, EmptyFields, EmptyFields>> {
+        let database = ctx
+            .data::<web::Data<Database>>()
+            .expect("Database not in context");
+
         query(
             after,
             before,
             first,
             last,
             |after, before, first, last| async move {
-                let mut start = after.map(|after| after + 1).unwrap_or(0);
-                let mut end = before.unwrap_or(10000);
-                if let Some(first) = first {
-                    end = (start + first).min(end);
-                }
-                if let Some(last) = last {
-                    start = if last > end - start { end } else { end - last };
-                }
+                let sessions = database.get_sessions_by_user(self).await;
 
-                let mut connection = Connection::new(start > 0, end < 10000);
-                connection.append(
-                    (start..end)
-                        .into_iter()
-                        .map(|n| Edge::with_additional_fields(n, n as i32, EmptyFields)),
-                );
+                let mut connection = Connection::new(false, true);
+                connection.append(sessions.into_iter().map(|session| {
+                    Edge::with_additional_fields(session.id.0.clone(), session, EmptyFields)
+                }));
                 Ok(connection)
             },
         )
