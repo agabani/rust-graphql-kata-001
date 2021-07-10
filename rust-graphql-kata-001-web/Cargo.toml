@@ -8,7 +8,6 @@ edition = "2018"
 [dependencies]
 actix-web = "4.0.0-beta.8"
 async-graphql = "2.9.7"
-async-graphql-actix-web = "2.9.7"
 config = "0.11.0"
 serde = "1.0.126"
 tracing = "0.1.26"
