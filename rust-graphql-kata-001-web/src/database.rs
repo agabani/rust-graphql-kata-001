@@ -503,4 +503,39 @@ RETURNING id;;
         .expect("Failed to run database query")
         .is_some()
     }
+
+    #[tracing::instrument(
+        skip(self, thread_id),
+        fields(
+            database.thread.id = thread_id.0.as_str(),
+        )
+    )]
+    pub async fn get_thread_by_id(&self, thread_id: &ThreadId) -> Option<Thread> {
+        let record = sqlx::query!(
+            r#"
+SELECT T.public_id as public_id,
+       T.created as created,
+       T.name as name,
+       F.public_id as forum_public_id,
+       U.public_id as user_public_id
+FROM thread as T
+        INNER JOIN forum AS F ON F.id = T.forum_id
+        INNER JOIN "user" as U ON U.id = T.created_by_user_id
+WHERE F.public_id = $1
+            "#,
+            thread_id.0
+        )
+        .fetch_optional(&self.postgres)
+        .await
+        .trace_err()
+        .expect("Failed to run database query")?;
+
+        Some(Thread {
+            id: ThreadId(record.public_id),
+            created: Created(record.created),
+            created_by: UserId(record.user_public_id),
+            forum: ForumId(record.forum_public_id),
+            name: ThreadName(record.name),
+        })
+    }
 }

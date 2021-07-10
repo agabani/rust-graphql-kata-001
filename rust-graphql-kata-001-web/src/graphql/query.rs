@@ -1,5 +1,5 @@
 use crate::database::{Database, Identity};
-use crate::domain::{Forum, Session, Thread, User, UserId, Username};
+use crate::domain::{Forum, Reply, Session, Thread, User, UserId, Username};
 use actix_web::web;
 use async_graphql::connection::{query, Connection, Edge, EmptyFields};
 use async_graphql::{Context, Object, Result};
@@ -158,6 +158,37 @@ impl Forum {
             },
         )
         .await
+    }
+}
+
+#[Object]
+impl Reply {
+    async fn id(&self) -> String {
+        self.id.0.clone()
+    }
+
+    async fn created(&self) -> String {
+        self.created.is8601()
+    }
+
+    async fn created_by<'a>(&self, ctx: &'a Context<'a>) -> Option<User> {
+        let database = ctx
+            .data::<web::Data<Database>>()
+            .expect("Database not in context");
+
+        database.get_user_by_id(&self.created_by).await
+    }
+
+    async fn text(&self) -> String {
+        self.text.0.clone()
+    }
+
+    async fn thread<'a>(&self, ctx: &'a Context<'a>) -> Option<Thread> {
+        let database = ctx
+            .data::<web::Data<Database>>()
+            .expect("Database not in context");
+
+        database.get_thread_by_id(&self.thread).await
     }
 }
 
