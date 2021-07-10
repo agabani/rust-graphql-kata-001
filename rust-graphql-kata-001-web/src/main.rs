@@ -6,6 +6,8 @@ async fn main() -> std::io::Result<()> {
 
     let (server, port, configuration) = startup::run(&[]);
 
+    configuration.postgres.migrate().await;
+
     tracing::info!(
         http_server.host = %configuration.http_server.host,
         http_server.port = %port,

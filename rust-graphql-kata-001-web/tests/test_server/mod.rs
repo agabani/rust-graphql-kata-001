@@ -33,6 +33,13 @@ impl TestServer {
         .await
         .expect("Failed to create database");
 
+        let postgres_database_pool = configuration.postgres.database_pool();
+
+        sqlx::migrate!("../migrations")
+            .run(&postgres_database_pool)
+            .await
+            .expect("Failed to migrate database");
+
         let _ = tokio::spawn(server);
 
         Self {
