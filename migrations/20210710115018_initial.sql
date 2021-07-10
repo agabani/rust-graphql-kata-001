@@ -15,7 +15,7 @@ create unique index user_username_uindex
 
 create table session
 (
-    id         integer      not null,
+    id         serial       not null,
     public_id  varchar(36)  not null,
     user_id    integer      not null,
     user_agent varchar(200) not null,

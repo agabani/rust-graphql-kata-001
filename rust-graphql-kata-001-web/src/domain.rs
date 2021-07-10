@@ -1,8 +1,11 @@
 #[derive(Clone)]
 pub struct Session {
-    pub id: String,
+    pub id: SessionId,
     pub user_agent: UserAgent,
 }
+
+#[derive(Clone)]
+pub struct SessionId(pub String);
 
 #[derive(Clone)]
 pub struct User {

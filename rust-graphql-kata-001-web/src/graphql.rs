@@ -1,5 +1,5 @@
 use crate::database::Database;
-use crate::domain::{Session, User, UserAgent, UserId, Username};
+use crate::domain::{Session, User, UserId};
 use actix_web::web;
 use async_graphql::connection::{query, Connection, Edge, EmptyFields};
 use async_graphql::{Context, EmptyMutation, EmptySubscription, Object, Result, Schema};
@@ -44,26 +44,12 @@ impl User {
         self.username.0.clone()
     }
 
-    async fn sessions(&self, id: Option<String>) -> Vec<Session> {
-        let data = vec![
-            Session {
-                id: "id 1".to_string(),
-                user_agent: UserAgent("user_agent".to_string()),
-            },
-            Session {
-                id: "id 2".to_string(),
-                user_agent: UserAgent("user_agent".to_string()),
-            },
-        ];
+    async fn sessions<'a>(&self, ctx: &'a Context<'a>, id: Option<String>) -> Vec<Session> {
+        let database = ctx
+            .data::<web::Data<Database>>()
+            .expect("Database not in context");
 
-        match id {
-            None => data,
-            Some(id) => data
-                .iter()
-                .filter(|d| d.id.contains(&id))
-                .cloned()
-                .collect::<Vec<_>>(),
-        }
+        database.get_sessions_by_user(self).await
     }
 
     async fn numbers(
@@ -104,20 +90,18 @@ impl User {
 #[Object]
 impl Session {
     async fn id(&self) -> String {
-        self.id.clone()
+        self.id.0.clone()
     }
 
     async fn user_agent(&self) -> String {
-        self.id.clone()
+        self.user_agent.0.clone()
     }
 
-    async fn user(&self) -> Option<User> {
-        match self.id.as_str() {
-            "id 1" | "id 2" => Some(User {
-                id: UserId("id".to_string()),
-                username: Username("username".to_string()),
-            }),
-            _ => None,
-        }
+    async fn user<'a>(&self, ctx: &'a Context<'a>) -> Option<User> {
+        let database = ctx
+            .data::<web::Data<Database>>()
+            .expect("Database not in context");
+
+        database.get_user_by_session(self).await
     }
 }
