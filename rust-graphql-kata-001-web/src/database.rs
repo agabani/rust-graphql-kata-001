@@ -1,6 +1,6 @@
 use crate::domain::{
-    Created, Forum, ForumId, ForumName, Session, SessionId, Thread, ThreadId, ThreadName, User,
-    UserAgent, UserId, Username,
+    Created, Forum, ForumId, ForumName, Reply, ReplyId, ReplyText, Session, SessionId, Thread,
+    ThreadId, ThreadName, User, UserAgent, UserId, Username,
 };
 use crate::tracing::TraceErrorExt;
 
@@ -537,5 +537,111 @@ WHERE F.public_id = $1
             forum: ForumId(record.forum_public_id),
             name: ThreadName(record.name),
         })
+    }
+
+    #[tracing::instrument(
+        skip(self, thread, start, limit),
+        fields(
+          database.thread.id = thread.id.0.as_str(),
+        )
+    )]
+    pub async fn get_replies_by_thread_oldest(
+        &self,
+        thread: &Thread,
+        start: usize,
+        limit: usize,
+    ) -> Vec<Identity<usize, Reply>> {
+        let records = sqlx::query!(
+            r#"
+SELECT R.id AS id,
+       R.public_id as public_id,
+       R.created as created,
+       R.text as text,
+       U.public_id as user_public_id,
+       T.public_id as thread_public_id
+FROM reply AS R
+        INNER JOIN "user" as U ON U.id = R.created_by_user_id
+        INNER JOIN thread AS T ON T.id = R.thread_id
+WHERE T.public_id = $1
+  AND R.id > $2
+ORDER BY R.id ASC
+LIMIT $3
+            "#,
+            thread.id.0,
+            start as i64,
+            limit as i64
+        )
+        .fetch_all(&self.postgres)
+        .await
+        .trace_err()
+        .expect("Failed to run database query");
+
+        records
+            .into_iter()
+            .map(|record| Identity {
+                id: record.id as usize,
+
+                value: Reply {
+                    id: ReplyId(record.public_id),
+                    created: Created(record.created),
+                    created_by: UserId(record.user_public_id),
+                    thread: ThreadId(record.thread_public_id),
+                    text: ReplyText(record.text),
+                },
+            })
+            .collect()
+    }
+
+    #[tracing::instrument(
+        skip(self, thread, start, limit),
+        fields(
+          database.thread.id = thread.id.0.as_str(),
+        )
+    )]
+    pub async fn get_replies_by_thread_newest(
+        &self,
+        thread: &Thread,
+        start: usize,
+        limit: usize,
+    ) -> Vec<Identity<usize, Reply>> {
+        let records = sqlx::query!(
+            r#"
+SELECT R.id AS id,
+       R.public_id as public_id,
+       R.created as created,
+       R.text as text,
+       U.public_id as user_public_id,
+       T.public_id as thread_public_id
+FROM reply AS R
+        INNER JOIN "user" as U ON U.id = R.created_by_user_id
+        INNER JOIN thread AS T ON T.id = R.thread_id
+WHERE T.public_id = $1
+  AND R.id < $2
+ORDER BY R.id DESC
+LIMIT $3
+            "#,
+            thread.id.0,
+            start as i64,
+            limit as i64
+        )
+        .fetch_all(&self.postgres)
+        .await
+        .trace_err()
+        .expect("Failed to run database query");
+
+        records
+            .into_iter()
+            .map(|record| Identity {
+                id: record.id as usize,
+
+                value: Reply {
+                    id: ReplyId(record.public_id),
+                    created: Created(record.created),
+                    created_by: UserId(record.user_public_id),
+                    thread: ThreadId(record.thread_public_id),
+                    text: ReplyText(record.text),
+                },
+            })
+            .collect()
     }
 }

@@ -68,7 +68,7 @@ create unique index thread_public_id_uindex
 create table reply
 (
     id                 bigserial                not null,
-    public_id          varchar(36),
+    public_id          varchar(36)              not null,
     created            timestamp with time zone not null,
     created_by_user_id bigint                   not null,
     thread_id          bigint                   not null,
