@@ -1,7 +1,11 @@
 #[derive(Clone)]
+pub struct Created(pub time::OffsetDateTime);
+
+#[derive(Clone)]
 pub struct Session {
     pub id: SessionId,
     pub user_agent: UserAgent,
+    pub created: Created,
 }
 
 #[derive(Clone)]

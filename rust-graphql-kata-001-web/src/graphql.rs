@@ -98,12 +98,12 @@ impl User {
 
 #[Object]
 impl Session {
-    async fn id(&self) -> String {
-        self.id.0.clone()
+    async fn created(&self) -> String {
+        self.created.0.format("%Y-%m-%dT%H:%M:%S.%NZ")
     }
 
-    async fn user_agent(&self) -> String {
-        self.user_agent.0.clone()
+    async fn id(&self) -> String {
+        self.id.0.clone()
     }
 
     async fn user<'a>(&self, ctx: &'a Context<'a>) -> Option<User> {
@@ -112,5 +112,9 @@ impl Session {
             .expect("Database not in context");
 
         database.get_user_by_session(self).await
+    }
+
+    async fn user_agent(&self) -> String {
+        self.user_agent.0.clone()
     }
 }

@@ -1,4 +1,4 @@
-use crate::domain::{Session, SessionId, User, UserAgent, UserId, Username};
+use crate::domain::{Created, Session, SessionId, User, UserAgent, UserId, Username};
 use crate::tracing::TraceErrorExt;
 
 pub struct Database {
@@ -96,7 +96,8 @@ WHERE S.public_id = $1
         let records = sqlx::query!(
             r#"
 SELECT S.public_id AS id,
-       S.user_agent as user_agent
+       S.user_agent as user_agent,
+       S.created as created
 FROM session AS S
         INNER JOIN "user" as U ON U.id = S.user_id
 WHERE U.public_id = $1
@@ -113,6 +114,7 @@ WHERE U.public_id = $1
             .map(|record| Session {
                 id: SessionId(record.id),
                 user_agent: UserAgent(record.user_agent),
+                created: Created(record.created),
             })
             .collect()
     }
