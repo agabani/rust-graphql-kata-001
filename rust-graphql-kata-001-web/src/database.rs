@@ -465,4 +465,42 @@ LIMIT $3
             })
             .collect()
     }
+
+    #[tracing::instrument(
+        skip(self, thread),
+        fields(
+            database.forum.id = thread.forum.0.as_str(),
+            database.thread.id = thread.id.0.as_str(),
+            database.thread.name = thread.name.0.as_str(),
+            database.user.id = thread.created_by.0.as_str(),
+        )
+    )]
+    pub async fn create_thread(&self, thread: &Thread) -> bool {
+        sqlx::query!(
+            r#"
+INSERT INTO thread (public_id, created, created_by_user_id, name, forum_id)
+VALUES (
+    $1, $2,
+    (SELECT U.id
+         FROM "user" AS U
+         WHERE u.public_id = $3),
+    $4,
+    (SELECT F.id
+         FROM forum AS F
+         WHERE F.public_id = $5))
+ON CONFLICT DO NOTHING
+RETURNING id;;
+"#,
+            thread.id.0,
+            thread.created.0,
+            thread.created_by.0,
+            thread.name.0,
+            thread.forum.0
+        )
+        .fetch_optional(&self.postgres)
+        .await
+        .trace_err()
+        .expect("Failed to run database query")
+        .is_some()
+    }
 }
