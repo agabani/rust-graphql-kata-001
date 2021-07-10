@@ -1,5 +1,6 @@
 use crate::domain::{
-    Created, Forum, ForumId, ForumName, Session, SessionId, User, UserAgent, UserId, Username,
+    Created, Forum, ForumId, ForumName, Session, SessionId, Thread, ThreadId, ThreadName, User,
+    UserAgent, UserId, Username,
 };
 use crate::tracing::TraceErrorExt;
 
@@ -20,7 +21,7 @@ impl Database {
     #[tracing::instrument(
         skip(self, user_id),
         fields(
-            database.user_id = user_id.0.as_str(),
+            database.user.id = user_id.0.as_str(),
         )
     )]
     pub async fn get_user_by_id(&self, user_id: &UserId) -> Option<User> {
@@ -47,7 +48,7 @@ WHERE U.public_id = $1
     #[tracing::instrument(
     skip(self, username),
         fields(
-            database.username = username.0.as_str(),
+            database.user.username = username.0.as_str(),
         )
     )]
     pub async fn get_user_by_username(&self, username: &Username) -> Option<User> {
@@ -96,7 +97,7 @@ WHERE S.public_id = $1
     #[tracing::instrument(
         skip(self, user, start, limit),
         fields(
-            database.user_id = user.id.0.as_str(),
+            database.user.id = user.id.0.as_str(),
         )
     )]
     pub async fn get_sessions_by_user_oldest(
@@ -143,7 +144,7 @@ LIMIT $3
     #[tracing::instrument(
         skip(self, user, start, limit),
         fields(
-            database.user_id = user.id.0.as_str(),
+            database.user.id = user.id.0.as_str(),
         )
     )]
     pub async fn get_sessions_by_user_newest(
@@ -325,5 +326,143 @@ RETURNING id;;
         .trace_err()
         .expect("Failed to run database query")
         .is_some()
+    }
+
+    #[tracing::instrument(
+    skip(self, forum_id),
+        fields(
+         database.forum.id = forum_id.0.as_str(),
+        )
+    )]
+    pub async fn get_forum_by_id(&self, forum_id: &ForumId) -> Option<Forum> {
+        let record = sqlx::query!(
+            r#"
+SELECT F.public_id as public_id,
+       F.created as created,
+       F.name as name,
+       U.public_id as user_public_id
+FROM forum as F
+        INNER JOIN "user" as U ON U.id = F.created_by_user_id
+WHERE F.public_id = $1
+            "#,
+            forum_id.0
+        )
+        .fetch_optional(&self.postgres)
+        .await
+        .trace_err()
+        .expect("Failed to run database query")?;
+
+        Some(Forum {
+            id: ForumId(record.public_id),
+            created: Created(record.created),
+            created_by: UserId(record.user_public_id),
+            name: ForumName(record.name),
+        })
+    }
+
+    #[tracing::instrument(
+    skip(self, forum, start, limit),
+        fields(
+           database.forum.id = forum.id.0.as_str(),
+        )
+    )]
+    pub async fn get_threads_by_forum_oldest(
+        &self,
+        forum: &Forum,
+        start: usize,
+        limit: usize,
+    ) -> Vec<Identity<usize, Thread>> {
+        let records = sqlx::query!(
+            r#"
+SELECT T.id AS id,
+       T.public_id as public_id,
+       T.created as created,
+       T.name as name,
+       U.public_id as user_public_id,
+       F.public_id as forum_public_id
+FROM thread AS T
+        INNER JOIN "user" as U ON U.id = T.created_by_user_id
+        INNER JOIN forum AS F ON F.id = T.forum_id
+WHERE F.public_id = $1
+  AND T.id > $2
+ORDER BY T.id ASC
+LIMIT $3
+            "#,
+            forum.id.0,
+            start as i64,
+            limit as i64
+        )
+        .fetch_all(&self.postgres)
+        .await
+        .trace_err()
+        .expect("Failed to run database query");
+
+        records
+            .into_iter()
+            .map(|record| Identity {
+                id: record.id as usize,
+
+                value: Thread {
+                    id: ThreadId(record.public_id),
+                    created: Created(record.created),
+                    created_by: UserId(record.user_public_id),
+                    forum: ForumId(record.forum_public_id),
+                    name: ThreadName(record.name),
+                },
+            })
+            .collect()
+    }
+
+    #[tracing::instrument(
+    skip(self, forum, start, limit),
+        fields(
+           database.forum.id = forum.id.0.as_str(),
+        )
+    )]
+    pub async fn get_threads_by_forum_newest(
+        &self,
+        forum: &Forum,
+        start: usize,
+        limit: usize,
+    ) -> Vec<Identity<usize, Thread>> {
+        let records = sqlx::query!(
+            r#"
+SELECT T.id AS id,
+       T.public_id as public_id,
+       T.created as created,
+       T.name as name,
+       U.public_id as user_public_id,
+       F.public_id as forum_public_id
+FROM thread AS T
+        INNER JOIN "user" as U ON U.id = T.created_by_user_id
+        INNER JOIN forum AS F ON F.id = T.forum_id
+WHERE F.public_id = $1
+  AND T.id < $2
+ORDER BY T.id DESC
+LIMIT $3
+            "#,
+            forum.id.0,
+            start as i64,
+            limit as i64
+        )
+        .fetch_all(&self.postgres)
+        .await
+        .trace_err()
+        .expect("Failed to run database query");
+
+        records
+            .into_iter()
+            .map(|record| Identity {
+                id: record.id as usize,
+
+                value: Thread {
+                    id: ThreadId(record.public_id),
+                    created: Created(record.created),
+                    created_by: UserId(record.user_public_id),
+                    forum: ForumId(record.forum_public_id),
+                    name: ThreadName(record.name),
+                },
+            })
+            .collect()
     }
 }

@@ -1,5 +1,5 @@
 use crate::database::{Database, Identity};
-use crate::domain::{Forum, Session, User, UserId, Username};
+use crate::domain::{Forum, Session, Thread, User, UserId, Username};
 use actix_web::web;
 use async_graphql::connection::{query, Connection, Edge, EmptyFields};
 use async_graphql::{Context, Object, Result};
@@ -110,6 +110,85 @@ impl Forum {
 
     async fn name(&self) -> String {
         self.name.0.clone()
+    }
+
+    async fn threads<'a>(
+        &self,
+        ctx: &'a Context<'a>,
+        after: Option<String>,
+        before: Option<String>,
+        first: Option<i32>,
+        last: Option<i32>,
+    ) -> Result<Connection<String, Thread, EmptyFields, EmptyFields>> {
+        let database = ctx
+            .data::<web::Data<Database>>()
+            .expect("Database not in context");
+
+        query(
+            after,
+            before,
+            first,
+            last,
+            |after: Option<String>, before: Option<String>, first, last| async move {
+                let after = after.and_then(decode_cursor).unwrap_or(usize::MIN);
+                let before = before.and_then(decode_cursor).unwrap_or(u32::MAX as usize);
+
+                let first = if first.is_none() && last.is_none() {
+                    Some(10)
+                } else {
+                    first
+                };
+
+                let results = match (first, last) {
+                    (Some(_), Some(_)) => todo!("Bad request..."),
+                    (Some(first), None) => {
+                        database
+                            .get_threads_by_forum_oldest(self, after, first + 1)
+                            .await
+                    }
+                    (None, Some(last)) => {
+                        database
+                            .get_threads_by_forum_newest(self, before, last + 1)
+                            .await
+                    }
+                    (None, None) => unreachable!(),
+                };
+
+                build_connections(results, first, last)
+            },
+        )
+        .await
+    }
+}
+
+#[Object]
+impl Thread {
+    async fn id(&self) -> String {
+        self.id.0.clone()
+    }
+
+    async fn created(&self) -> String {
+        self.created.is8601()
+    }
+
+    async fn created_by<'a>(&self, ctx: &'a Context<'a>) -> Option<User> {
+        let database = ctx
+            .data::<web::Data<Database>>()
+            .expect("Database not in context");
+
+        database.get_user_by_id(&self.created_by).await
+    }
+
+    async fn name(&self) -> String {
+        self.name.0.clone()
+    }
+
+    async fn forum<'a>(&self, ctx: &'a Context<'a>) -> Option<Forum> {
+        let database = ctx
+            .data::<web::Data<Database>>()
+            .expect("Database not in context");
+
+        database.get_forum_by_id(&self.forum).await
     }
 }
 
