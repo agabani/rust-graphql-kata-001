@@ -90,49 +90,51 @@ impl User {
             first,
             last,
             |after: Option<String>, before: Option<String>, first, last| async move {
-                let sessions = match (first, last) {
-                    (Some(first), None) => {
-                        let start = after.and_then(decode).unwrap_or(usize::MIN);
-                        (
-                            database
-                                .get_sessions_by_user_oldest(self, start, first + 1)
-                                .await,
-                            first,
-                            true,
-                        )
-                    }
-                    (None, Some(last)) => {
-                        let start = before.and_then(decode).unwrap_or(u32::MAX);
-                        (
-                            database
-                                .get_sessions_by_user_newest(self, start as usize, last + 1)
-                                .await,
-                            last,
-                            false,
-                        )
-                    }
-                    (None, None) => {
-                        let start = after.and_then(decode).unwrap_or(100);
-                        let limit = first.unwrap_or(100);
-                        (
-                            database
-                                .get_sessions_by_user_oldest(self, start, limit + 1)
-                                .await,
-                            limit,
-                            true,
-                        )
-                    }
-                    _ => todo!("Bad query"),
+                let after = after.and_then(decode).unwrap_or(usize::MIN);
+                let before = before.and_then(decode).unwrap_or(u32::MAX as usize);
+
+                let first = if first.is_none() && last.is_none() {
+                    Some(10)
+                } else {
+                    first
                 };
 
-                let has_page = sessions.0.len() > sessions.1;
+                let results = match (first, last) {
+                    (Some(_), Some(_)) => todo!("Bad request..."),
+                    (Some(first), None) => {
+                        database
+                            .get_sessions_by_user_oldest(self, after, first + 1)
+                            .await
+                    }
+                    (None, Some(last)) => {
+                        database
+                            .get_sessions_by_user_newest(self, before, last + 1)
+                            .await
+                    }
+                    (None, None) => unreachable!(),
+                };
 
-                let mut connection =
-                    Connection::new(has_page && !sessions.2, has_page && sessions.2);
-                connection.append(sessions.0.into_iter().take(sessions.1).map(|session| {
+                let page_info = match (first, last) {
+                    (Some(first), None) => {
+                        let has_previous_page = false;
+                        let has_next_page = results.len() > first;
+                        let results = results.into_iter().take(first).collect::<Vec<_>>();
+                        (results, has_previous_page, has_next_page)
+                    }
+                    (None, Some(last)) => {
+                        let has_previous_page = results.len() > last;
+                        let has_next_page = false;
+                        let results = results.into_iter().take(last).rev().collect::<Vec<_>>();
+                        (results, has_previous_page, has_next_page)
+                    }
+                    _ => unreachable!(),
+                };
+
+                let mut connection = Connection::new(page_info.1, page_info.2);
+                connection.append(page_info.0.into_iter().map(|item| {
                     Edge::with_additional_fields(
-                        base64::encode(session.id.to_string()),
-                        session.value,
+                        base64::encode(item.id.to_string()),
+                        item.value,
                         EmptyFields,
                     )
                 }));
