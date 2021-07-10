@@ -190,8 +190,8 @@ LIMIT $3
     #[tracing::instrument(
         skip(self, user),
         fields(
-            database.user_id = user.id.0.as_str(),
-            database.username = user.username.0.as_str(),
+            database.user.id = user.id.0.as_str(),
+            database.user.username = user.username.0.as_str(),
         )
     )]
     pub async fn create_user(&self, user: &User) -> bool {
@@ -292,5 +292,38 @@ LIMIT $2
                 },
             })
             .collect()
+    }
+
+    #[tracing::instrument(
+        skip(self, forum),
+        fields(
+            database.forum.id = forum.id.0.as_str(),
+            database.forum.name = forum.name.0.as_str(),
+            database.user.id = forum.created_by.0.as_str(),
+        )
+    )]
+    pub async fn create_forum(&self, forum: &Forum) -> bool {
+        sqlx::query!(
+            r#"
+INSERT INTO forum (public_id, created, created_by_user_id, name)
+VALUES (
+    $1, $2,
+    (SELECT U.id
+         FROM "user" AS U
+         WHERE u.public_id = $3),
+    $4)
+ON CONFLICT DO NOTHING
+RETURNING id;;
+"#,
+            forum.id.0,
+            forum.created.0,
+            forum.created_by.0,
+            forum.name.0
+        )
+        .fetch_optional(&self.postgres)
+        .await
+        .trace_err()
+        .expect("Failed to run database query")
+        .is_some()
     }
 }

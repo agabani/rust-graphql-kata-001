@@ -100,8 +100,12 @@ impl Forum {
         self.created.is8601()
     }
 
-    async fn created_by(&self) -> User {
-        todo!()
+    async fn created_by<'a>(&self, ctx: &'a Context<'a>) -> Option<User> {
+        let database = ctx
+            .data::<web::Data<Database>>()
+            .expect("Database not in context");
+
+        database.get_user_by_id(&self.created_by).await
     }
 
     async fn name(&self) -> String {
