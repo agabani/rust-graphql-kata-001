@@ -83,10 +83,40 @@ impl User {
             first,
             last,
             |after, before, first, last| async move {
-                let sessions = database.get_sessions_by_user(self).await;
+                let sessions = match (first, last) {
+                    (Some(first), None) => {
+                        let first = first;
+                        (
+                            database.get_sessions_by_user_oldest(self, first + 1).await,
+                            first,
+                            true,
+                        )
+                    }
+                    (None, Some(last)) => {
+                        let last = last;
+                        (
+                            database.get_sessions_by_user_newest(self, last + 1).await,
+                            last,
+                            false,
+                        )
+                    }
+                    (None, None) => {
+                        let limit = first.unwrap_or(100);
 
-                let mut connection = Connection::new(false, true);
-                connection.append(sessions.into_iter().map(|session| {
+                        (
+                            database.get_sessions_by_user_oldest(self, limit + 1).await,
+                            limit,
+                            true,
+                        )
+                    }
+                    _ => todo!("Bad query"),
+                };
+
+                let has_page = sessions.0.len() > sessions.1;
+
+                let mut connection =
+                    Connection::new(has_page && !sessions.2, has_page && sessions.2);
+                connection.append(sessions.0.into_iter().take(sessions.1).map(|session| {
                     Edge::with_additional_fields(session.id.0.clone(), session, EmptyFields)
                 }));
                 Ok(connection)
