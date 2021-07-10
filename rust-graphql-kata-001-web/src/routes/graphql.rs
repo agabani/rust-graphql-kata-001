@@ -21,7 +21,7 @@ async fn index(
     if let Some(user_id) = http_request
         .headers()
         .get("user-id")
-        .and_then(|value| value.to_str().map(UserId::new).ok())
+        .and_then(|value| value.to_str().map(|value| UserId(value.to_string())).ok())
     {
         request = request.data(user_id);
     }
