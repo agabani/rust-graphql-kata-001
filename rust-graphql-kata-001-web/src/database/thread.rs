@@ -5,7 +5,7 @@ use crate::tracing::TraceErrorExt;
 #[tracing::instrument(
     skip(executor, thread),
     fields(
-        database.forum.id = thread.forum.0.as_str(),
+        database.forum.id = thread.forum_id.0.as_str(),
         database.thread.id = thread.id.0.as_str(),
         database.thread.name = thread.name.0.as_str(),
         database.user.id = thread.created_by.0.as_str(),
@@ -31,7 +31,7 @@ RETURNING id;;
         thread.created.0,
         thread.created_by.0,
         thread.name.0,
-        thread.forum.0
+        thread.forum_id.0
     )
     .fetch_optional(executor)
     .await
@@ -73,7 +73,7 @@ WHERE T.public_id = $1
         id: ThreadId(record.public_id),
         created: Created(record.created),
         created_by: UserId(record.user_public_id),
-        forum: ForumId(record.forum_public_id),
+        forum_id: ForumId(record.forum_public_id),
         name: ThreadName(record.name),
     })
 }
@@ -124,7 +124,7 @@ LIMIT $3
                 id: ThreadId(record.public_id),
                 created: Created(record.created),
                 created_by: UserId(record.user_public_id),
-                forum: ForumId(record.forum_public_id),
+                forum_id: ForumId(record.forum_public_id),
                 name: ThreadName(record.name),
             },
         })
@@ -177,7 +177,7 @@ LIMIT $3
                 id: ThreadId(record.public_id),
                 created: Created(record.created),
                 created_by: UserId(record.user_public_id),
-                forum: ForumId(record.forum_public_id),
+                forum_id: ForumId(record.forum_public_id),
                 name: ThreadName(record.name),
             },
         })

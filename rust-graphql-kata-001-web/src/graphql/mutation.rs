@@ -61,7 +61,7 @@ impl MutationRoot {
             id: ReplyId(Uuid::new_v4().to_string()),
             created: Created(time::OffsetDateTime::now_utc()),
             created_by: user_id.clone(),
-            thread: ThreadId(input.reply.thread_id),
+            thread_id: ThreadId(input.reply.thread_id),
             text: ReplyText(input.reply.text),
         };
 
@@ -91,7 +91,7 @@ impl MutationRoot {
             id: ThreadId(Uuid::new_v4().to_string()),
             created: Created(time::OffsetDateTime::now_utc()),
             created_by: user_id.clone(),
-            forum: ForumId(input.thread.forum_id),
+            forum_id: ForumId(input.thread.forum_id),
             name: ThreadName(input.thread.name),
         };
 

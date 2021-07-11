@@ -33,7 +33,7 @@ impl Thread {
             .data::<web::Data<Database>>()
             .expect("Database not in context");
 
-        forum::get_by_id(&database.postgres, &self.forum).await
+        forum::get_by_id(&database.postgres, &self.forum_id).await
     }
 
     async fn replies<'a>(

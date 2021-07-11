@@ -21,7 +21,7 @@ pub struct Reply {
     pub id: ReplyId,
     pub created: Created,
     pub created_by: UserId,
-    pub thread: ThreadId,
+    pub thread_id: ThreadId,
     pub text: ReplyText,
 }
 
@@ -41,7 +41,7 @@ pub struct Thread {
     pub id: ThreadId,
     pub created: Created,
     pub created_by: UserId,
-    pub forum: ForumId,
+    pub forum_id: ForumId,
     pub name: ThreadName,
 }
 

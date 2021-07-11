@@ -6,7 +6,7 @@ use crate::tracing::TraceErrorExt;
     skip(executor, reply),
     fields(
         database.reply.id = reply.id.0.as_str(),
-        database.thread.id = reply.thread.0.as_str(),
+        database.thread.id = reply.thread_id.0.as_str(),
         database.user.id = reply.created_by.0.as_str(),
     )
 )]
@@ -29,7 +29,7 @@ RETURNING id;;
         reply.id.0,
         reply.created.0,
         reply.created_by.0,
-        reply.thread.0,
+        reply.thread_id.0,
         reply.text.0
     )
     .fetch_optional(executor)
@@ -85,7 +85,7 @@ LIMIT $3
                 id: ReplyId(record.public_id),
                 created: Created(record.created),
                 created_by: UserId(record.user_public_id),
-                thread: ThreadId(record.thread_public_id),
+                thread_id: ThreadId(record.thread_public_id),
                 text: ReplyText(record.text),
             },
         })
@@ -138,7 +138,7 @@ LIMIT $3
                 id: ReplyId(record.public_id),
                 created: Created(record.created),
                 created_by: UserId(record.user_public_id),
-                thread: ThreadId(record.thread_public_id),
+                thread_id: ThreadId(record.thread_public_id),
                 text: ReplyText(record.text),
             },
         })
@@ -191,7 +191,7 @@ LIMIT $3
                 id: ReplyId(record.public_id),
                 created: Created(record.created),
                 created_by: UserId(record.user_public_id),
-                thread: ThreadId(record.thread_public_id),
+                thread_id: ThreadId(record.thread_public_id),
                 text: ReplyText(record.text),
             },
         })
@@ -244,7 +244,7 @@ LIMIT $3
                 id: ReplyId(record.public_id),
                 created: Created(record.created),
                 created_by: UserId(record.user_public_id),
-                thread: ThreadId(record.thread_public_id),
+                thread_id: ThreadId(record.thread_public_id),
                 text: ReplyText(record.text),
             },
         })

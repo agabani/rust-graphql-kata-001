@@ -31,6 +31,6 @@ impl Reply {
             .data::<web::Data<Database>>()
             .expect("Database not in context");
 
-        thread::get_by_id(&database.postgres, &self.thread).await
+        thread::get_by_id(&database.postgres, &self.thread_id).await
     }
 }
