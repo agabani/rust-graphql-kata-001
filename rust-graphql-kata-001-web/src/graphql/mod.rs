@@ -1,5 +1,10 @@
+mod forum;
 mod mutation;
 mod query;
+mod reply;
+mod session;
+mod thread;
+mod user;
 
 use crate::graphql::mutation::MutationRoot;
 use crate::graphql::query::QueryRoot;
