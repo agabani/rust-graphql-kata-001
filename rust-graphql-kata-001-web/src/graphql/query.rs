@@ -1,4 +1,4 @@
-use crate::database::{forum, reply, session, thread, Database, Identity};
+use crate::database::{forum, reply, session, thread, user, Database, Identity};
 use crate::domain::{Forum, Reply, Session, Thread, User, UserId, Username};
 use actix_web::web;
 use async_graphql::connection::{query, Connection, Edge, EmptyFields};
@@ -25,7 +25,7 @@ impl QueryRoot {
             Some(user_id) => user_id,
         };
 
-        database.get_user_by_id(user_id).await
+        user::get_by_id(&database.postgres, user_id).await
     }
 
     async fn forums<'a>(
@@ -83,11 +83,11 @@ impl QueryRoot {
             .expect("Database not in context");
 
         if let Some(id) = id {
-            return database.get_user_by_id(&UserId(id)).await;
+            return user::get_by_id(&database.postgres, &UserId(id)).await;
         }
 
         if let Some(username) = username {
-            return database.get_user_by_username(&Username(username)).await;
+            return user::get_by_username(&database.postgres, &Username(username)).await;
         }
 
         None
@@ -109,7 +109,7 @@ impl Forum {
             .data::<web::Data<Database>>()
             .expect("Database not in context");
 
-        database.get_user_by_id(&self.created_by).await
+        user::get_by_id(&database.postgres, &self.created_by).await
     }
 
     async fn name(&self) -> String {
@@ -178,7 +178,7 @@ impl Reply {
             .data::<web::Data<Database>>()
             .expect("Database not in context");
 
-        database.get_user_by_id(&self.created_by).await
+        user::get_by_id(&database.postgres, &self.created_by).await
     }
 
     async fn text(&self) -> String {
@@ -209,7 +209,7 @@ impl Thread {
             .data::<web::Data<Database>>()
             .expect("Database not in context");
 
-        database.get_user_by_id(&self.created_by).await
+        user::get_by_id(&database.postgres, &self.created_by).await
     }
 
     async fn name(&self) -> String {
@@ -387,7 +387,7 @@ impl Session {
             .data::<web::Data<Database>>()
             .expect("Database not in context");
 
-        database.get_user_by_session(self).await
+        user::get_by_session(&database.postgres, self).await
     }
 
     async fn user_agent(&self) -> String {
