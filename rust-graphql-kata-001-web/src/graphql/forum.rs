@@ -8,8 +8,8 @@ use crate::graphql::query::{build_connections, decode_cursor};
 
 #[Object]
 impl Forum {
-    async fn id(&self) -> String {
-        self.id.0.clone()
+    async fn id(&self) -> &str {
+        &self.id.0
     }
 
     async fn created(&self) -> String {
@@ -24,8 +24,8 @@ impl Forum {
         user::get_by_id(&database.postgres, &self.created_by).await
     }
 
-    async fn name(&self) -> String {
-        self.name.0.clone()
+    async fn name(&self) -> &str {
+        &self.name.0
     }
 
     async fn threads<'a>(

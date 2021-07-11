@@ -10,8 +10,8 @@ impl Session {
         self.created.is8601()
     }
 
-    async fn id(&self) -> String {
-        self.id.0.clone()
+    async fn id(&self) -> &str {
+        &self.id.0
     }
 
     async fn user<'a>(&self, ctx: &'a Context<'a>) -> Option<User> {
@@ -22,7 +22,7 @@ impl Session {
         user::get_by_session(&database.postgres, self).await
     }
 
-    async fn user_agent(&self) -> String {
-        self.user_agent.0.clone()
+    async fn user_agent(&self) -> &str {
+        &self.user_agent.0
     }
 }

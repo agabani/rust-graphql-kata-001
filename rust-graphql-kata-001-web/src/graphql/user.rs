@@ -8,12 +8,12 @@ use crate::graphql::query::{build_connections, decode_cursor};
 
 #[Object]
 impl User {
-    async fn id(&self) -> String {
-        self.id.0.clone()
+    async fn id(&self) -> &str {
+        &self.id.0
     }
 
-    async fn username(&self) -> String {
-        self.username.0.clone()
+    async fn username(&self) -> &str {
+        &self.username.0
     }
 
     async fn replies<'a>(

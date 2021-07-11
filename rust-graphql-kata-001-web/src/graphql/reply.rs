@@ -6,8 +6,8 @@ use crate::domain::{Reply, Thread, User};
 
 #[Object]
 impl Reply {
-    async fn id(&self) -> String {
-        self.id.0.clone()
+    async fn id(&self) -> &str {
+        &self.id.0
     }
 
     async fn created(&self) -> String {
@@ -22,8 +22,8 @@ impl Reply {
         user::get_by_id(&database.postgres, &self.created_by).await
     }
 
-    async fn text(&self) -> String {
-        self.text.0.clone()
+    async fn text(&self) -> &str {
+        &self.text.0
     }
 
     async fn thread<'a>(&self, ctx: &'a Context<'a>) -> Option<Thread> {
