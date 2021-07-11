@@ -1,4 +1,4 @@
-use crate::database::{reply, Database};
+use crate::database::{reply, thread, Database};
 use crate::domain::{
     Created, Forum, ForumId, ForumName, Reply, ReplyId, ReplyText, Thread, ThreadId, ThreadName,
     User, UserId, Username,
@@ -94,7 +94,7 @@ impl MutationRoot {
             name: ThreadName(input.thread.name),
         };
 
-        match database.create_thread(&thread).await {
+        match thread::create_thread(&database.postgres, &thread).await {
             true => Some(thread),
             false => None,
         }

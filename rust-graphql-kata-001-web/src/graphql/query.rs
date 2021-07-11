@@ -1,4 +1,4 @@
-use crate::database::{reply, Database, Identity};
+use crate::database::{reply, thread, Database, Identity};
 use crate::domain::{Forum, Reply, Session, Thread, User, UserId, Username};
 use actix_web::web;
 use async_graphql::connection::{query, Connection, Edge, EmptyFields};
@@ -142,13 +142,11 @@ impl Forum {
                 let results = match (first, last) {
                     (Some(_), Some(_)) => todo!("Bad request..."),
                     (Some(first), None) => {
-                        database
-                            .get_threads_by_forum_oldest(self, after, first + 1)
+                        thread::list_oldest_by_forum(&database.postgres, self, after, first + 1)
                             .await
                     }
                     (None, Some(last)) => {
-                        database
-                            .get_threads_by_forum_newest(self, before, last + 1)
+                        thread::list_newest_by_forum(&database.postgres, self, before, last + 1)
                             .await
                     }
                     (None, None) => unreachable!(),
@@ -188,7 +186,7 @@ impl Reply {
             .data::<web::Data<Database>>()
             .expect("Database not in context");
 
-        database.get_thread_by_id(&self.thread).await
+        thread::get_by_id(&database.postgres, &self.thread).await
     }
 }
 
