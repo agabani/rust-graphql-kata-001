@@ -18,4 +18,4 @@ if [ "$DATABASE_URL" ]; then
   fi
 fi
 
-./home/appuser/rust-graphql-kata-001
+./home/appuser/rust-graphql-kata-001-web
