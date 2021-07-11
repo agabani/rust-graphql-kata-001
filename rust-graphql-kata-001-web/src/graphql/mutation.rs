@@ -1,10 +1,10 @@
-use crate::database::Database;
+use crate::database::{reply, Database};
 use crate::domain::{
     Created, Forum, ForumId, ForumName, Reply, ReplyId, ReplyText, Thread, ThreadId, ThreadName,
     User, UserId, Username,
 };
 use actix_web::web;
-use async_graphql::{Context, InputObject, Object, Result};
+use async_graphql::{Context, InputObject, Object};
 use uuid::Uuid;
 
 pub struct MutationRoot;
@@ -64,7 +64,7 @@ impl MutationRoot {
             text: ReplyText(input.reply.text),
         };
 
-        match database.create_reply(&reply).await {
+        match reply::create_reply(&database.postgres, &reply).await {
             true => Some(reply),
             false => None,
         }

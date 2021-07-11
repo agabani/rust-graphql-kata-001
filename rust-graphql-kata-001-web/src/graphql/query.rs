@@ -1,4 +1,4 @@
-use crate::database::{Database, Identity};
+use crate::database::{reply, Database, Identity};
 use crate::domain::{Forum, Reply, Session, Thread, User, UserId, Username};
 use actix_web::web;
 use async_graphql::connection::{query, Connection, Edge, EmptyFields};
@@ -252,13 +252,11 @@ impl Thread {
                 let results = match (first, last) {
                     (Some(_), Some(_)) => todo!("Bad request..."),
                     (Some(first), None) => {
-                        database
-                            .get_replies_by_thread_oldest(self, after, first + 1)
+                        reply::list_oldest_by_thread(&database.postgres, self, after, first + 1)
                             .await
                     }
                     (None, Some(last)) => {
-                        database
-                            .get_replies_by_thread_newest(self, before, last + 1)
+                        reply::list_newest_by_thread(&database.postgres, self, before, last + 1)
                             .await
                     }
                     (None, None) => unreachable!(),
@@ -311,14 +309,10 @@ impl User {
                 let results = match (first, last) {
                     (Some(_), Some(_)) => todo!("Bad request..."),
                     (Some(first), None) => {
-                        database
-                            .get_replies_by_user_oldest(self, after, first + 1)
-                            .await
+                        reply::list_oldest_by_user(&database.postgres, self, after, first + 1).await
                     }
                     (None, Some(last)) => {
-                        database
-                            .get_replies_by_user_newest(self, before, last + 1)
-                            .await
+                        reply::list_newest_by_user(&database.postgres, self, before, last + 1).await
                     }
                     (None, None) => unreachable!(),
                 };
