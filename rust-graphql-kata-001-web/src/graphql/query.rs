@@ -1,4 +1,4 @@
-use crate::database::{forum, reply, thread, Database, Identity};
+use crate::database::{forum, reply, session, thread, Database, Identity};
 use crate::domain::{Forum, Reply, Session, Thread, User, UserId, Username};
 use actix_web::web;
 use async_graphql::connection::{query, Connection, Edge, EmptyFields};
@@ -355,13 +355,11 @@ impl User {
                 let results = match (first, last) {
                     (Some(_), Some(_)) => todo!("Bad request..."),
                     (Some(first), None) => {
-                        database
-                            .get_sessions_by_user_oldest(self, after, first + 1)
+                        session::list_oldest_by_user(&database.postgres, self, after, first + 1)
                             .await
                     }
                     (None, Some(last)) => {
-                        database
-                            .get_sessions_by_user_newest(self, before, last + 1)
+                        session::list_newest_by_user(&database.postgres, self, before, last + 1)
                             .await
                     }
                     (None, None) => unreachable!(),
