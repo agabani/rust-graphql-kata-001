@@ -8,7 +8,7 @@ use crate::tracing::TraceErrorExt;
         database.user.username = user.username.0.as_str(),
     )
 )]
-pub async fn create_user(executor: &sqlx::Pool<sqlx::Postgres>, user: &User) -> bool {
+pub async fn create(executor: &sqlx::Pool<sqlx::Postgres>, user: &User) -> bool {
     sqlx::query!(
         r#"
 INSERT INTO "user" (public_id, username)

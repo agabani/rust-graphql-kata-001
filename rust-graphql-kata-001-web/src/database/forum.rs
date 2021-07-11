@@ -10,7 +10,7 @@ use crate::tracing::TraceErrorExt;
         database.user.id = forum.created_by.0.as_str(),
     )
 )]
-pub async fn create_forum(executor: &sqlx::Pool<sqlx::Postgres>, forum: &Forum) -> bool {
+pub async fn create(executor: &sqlx::Pool<sqlx::Postgres>, forum: &Forum) -> bool {
     sqlx::query!(
         r#"
 INSERT INTO forum (public_id, created, created_by_user_id, name)

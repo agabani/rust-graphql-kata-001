@@ -11,7 +11,7 @@ use crate::tracing::TraceErrorExt;
         database.user.id = thread.created_by.0.as_str(),
     )
 )]
-pub async fn create_thread(executor: &sqlx::Pool<sqlx::Postgres>, thread: &Thread) -> bool {
+pub async fn create(executor: &sqlx::Pool<sqlx::Postgres>, thread: &Thread) -> bool {
     sqlx::query!(
         r#"
 INSERT INTO thread (public_id, created, created_by_user_id, name, forum_id)

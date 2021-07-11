@@ -10,7 +10,7 @@ use crate::tracing::TraceErrorExt;
         database.user.id = reply.created_by.0.as_str(),
     )
 )]
-pub async fn create_reply(executor: &sqlx::Pool<sqlx::Postgres>, reply: &Reply) -> bool {
+pub async fn create(executor: &sqlx::Pool<sqlx::Postgres>, reply: &Reply) -> bool {
     sqlx::query!(
         r#"
 INSERT INTO reply (public_id, created, created_by_user_id, thread_id, text)

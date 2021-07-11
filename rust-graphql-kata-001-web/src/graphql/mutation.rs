@@ -34,7 +34,7 @@ impl MutationRoot {
             name: ForumName(input.forum.name),
         };
 
-        match forum::create_forum(&database.postgres, &forum).await {
+        match forum::create(&database.postgres, &forum).await {
             true => Some(forum),
             false => None,
         }
@@ -64,7 +64,7 @@ impl MutationRoot {
             text: ReplyText(input.reply.text),
         };
 
-        match reply::create_reply(&database.postgres, &reply).await {
+        match reply::create(&database.postgres, &reply).await {
             true => Some(reply),
             false => None,
         }
@@ -94,7 +94,7 @@ impl MutationRoot {
             name: ThreadName(input.thread.name),
         };
 
-        match thread::create_thread(&database.postgres, &thread).await {
+        match thread::create(&database.postgres, &thread).await {
             true => Some(thread),
             false => None,
         }
@@ -112,7 +112,7 @@ impl MutationRoot {
             username: Username(input.username),
         };
 
-        match user::create_user(&database.postgres, &user).await {
+        match user::create(&database.postgres, &user).await {
             true => Some(user),
             false => None,
         }
