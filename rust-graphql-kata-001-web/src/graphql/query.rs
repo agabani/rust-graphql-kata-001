@@ -1,9 +1,11 @@
-use crate::database::{forum, user, Database, Identity};
-use crate::domain::{Forum, User, UserId, Username};
+use std::str::FromStr;
+
 use actix_web::web;
 use async_graphql::connection::{query, Connection, Edge, EmptyFields};
 use async_graphql::{Context, Object, Result};
-use std::str::FromStr;
+
+use crate::database::{forum, user, Database, Identity};
+use crate::domain::{Forum, User, UserId, Username};
 
 pub struct QueryRoot;
 

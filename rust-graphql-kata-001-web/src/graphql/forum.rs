@@ -1,9 +1,10 @@
-use crate::database::{thread, user, Database};
-use crate::domain::{Forum, Thread, User};
-use crate::graphql::query::{build_connections, decode_cursor};
 use actix_web::web;
 use async_graphql::connection::{query, Connection, EmptyFields};
 use async_graphql::{Context, Object, Result};
+
+use crate::database::{thread, user, Database};
+use crate::domain::{Forum, Thread, User};
+use crate::graphql::query::{build_connections, decode_cursor};
 
 #[Object]
 impl Forum {

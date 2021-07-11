@@ -1,6 +1,7 @@
-use crate::tracing::TraceErrorExt;
 use actix_web::{web, HttpResponse};
 use sqlx::{Pool, Postgres};
+
+use crate::tracing::TraceErrorExt;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.route("liveness", web::get().to(liveness_get))

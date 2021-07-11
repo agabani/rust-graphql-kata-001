@@ -1,9 +1,10 @@
+use actix_web::dev::Server;
+use actix_web::{web, App, HttpServer};
+
 use crate::configuration::Configuration;
 use crate::database::Database;
 use crate::routes::{graphql, health};
 use crate::tracing::TraceErrorExt;
-use actix_web::dev::Server;
-use actix_web::{web, App, HttpServer};
 
 /// Configures the HTTP server and dependencies.
 ///

@@ -1,11 +1,12 @@
+use actix_web::web;
+use async_graphql::{Context, InputObject, Object};
+use uuid::Uuid;
+
 use crate::database::{forum, reply, thread, user, Database};
 use crate::domain::{
     Created, Forum, ForumId, ForumName, Reply, ReplyId, ReplyText, Thread, ThreadId, ThreadName,
     User, UserId, Username,
 };
-use actix_web::web;
-use async_graphql::{Context, InputObject, Object};
-use uuid::Uuid;
 
 pub struct MutationRoot;
 

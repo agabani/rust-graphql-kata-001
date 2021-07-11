@@ -1,7 +1,8 @@
-use crate::database::{user, Database};
-use crate::domain::{Session, User};
 use actix_web::web;
 use async_graphql::{Context, Object};
+
+use crate::database::{user, Database};
+use crate::domain::{Session, User};
 
 #[Object]
 impl Session {

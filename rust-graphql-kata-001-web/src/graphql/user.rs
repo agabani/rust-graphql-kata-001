@@ -1,9 +1,10 @@
-use crate::database::{reply, session, Database};
-use crate::domain::{Reply, Session, User};
-use crate::graphql::query::{build_connections, decode_cursor};
 use actix_web::web;
 use async_graphql::connection::{query, Connection, EmptyFields};
 use async_graphql::{Context, Object, Result};
+
+use crate::database::{reply, session, Database};
+use crate::domain::{Reply, Session, User};
+use crate::graphql::query::{build_connections, decode_cursor};
 
 #[Object]
 impl User {

@@ -1,8 +1,9 @@
+use std::net::TcpListener;
+
 use config::Config;
 use sqlx::migrate::MigrateDatabase;
 use sqlx::postgres::{PgConnectOptions, PgPoolOptions, PgSslMode};
 use sqlx::Pool;
-use std::net::TcpListener;
 
 #[derive(serde::Deserialize)]
 pub struct Configuration {

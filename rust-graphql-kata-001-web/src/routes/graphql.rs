@@ -1,9 +1,10 @@
-use crate::database::Database;
-use crate::domain::UserId;
-use crate::graphql::GraphQLSchema;
 use actix_web::{web, HttpResponse};
 use async_graphql::http::{playground_source, GraphQLPlaygroundConfig};
 use async_graphql::Request;
+
+use crate::database::Database;
+use crate::domain::UserId;
+use crate::graphql::GraphQLSchema;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.route("/", web::post().to(index))
